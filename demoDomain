@@ -1,0 +1,118 @@
+
+
+// User class
+class User {
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String seat;
+
+    // Constructor,// Constructor
+    public User(String firstName, String lastName, String email) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+    }
+
+    // Getters and setters
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getSeat() {
+        return seat;
+    }
+
+    public void setSeat(String seat) {
+        this.seat = seat;
+    }
+
+    // Convert User object to JSON
+    public String toJson() {
+        return "{\"firstName\":\"" + firstName + "\",\"lastName\":\"" + lastName + "\",\"email\":\"" + email + "\",\"seat\":\"" + seat + "\"}";
+    }
+}
+
+// Ticket class
+class Ticket {
+    private String from;
+    private String to;
+    private User user;
+    private double price;
+    private String seat;
+
+    // Constructor
+    public Ticket(String from, String to, User user, double price, String seat) {
+        this.from = from;
+        this.to = to;
+        this.user = user;
+        this.price = price;
+        this.seat = seat;
+    }
+
+    // Getters and setters
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public String getSeat() {
+        return seat;
+    }
+
+    public void setSeat(String seat) {
+        this.seat = seat;
+    }
+
+    // Convert Ticket object to JSON
+    public String toJson() {
+        return "{\"from\":\"" + from + "\",\"to\":\"" + to + "\",\"user\":" + user.toJson() + ",\"price\":" + price + ",\"seat\":\"" + seat + "\"}";
+    }
+}
