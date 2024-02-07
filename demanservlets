@@ -1,0 +1,128 @@
+import com.google.gson.Gson;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet("/trainTicket")
+public class TrainTicketServlets extends HttpServlet {
+    private Map<String, Ticket> tickets = new HashMap<>();
+    private Map<String, User> users = new HashMap<>();
+    private Map<String, String> seatsA = new HashMap<>();
+    private Map<String, String> seatsB = new HashMap<>();
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
+        String email = request.getParameter("email");
+        String section = request.getParameter("section");
+
+        String ticketId = UUID.randomUUID().toString();
+
+        String seat;
+        if ("A".equals(section)) {
+            seat = assignSeat(seatsA, section);
+        } else {
+            seat = assignSeat(seatsB, section);
+        }
+
+        User user = new User(firstName, lastName, email);
+        Ticket ticket = new Ticket("London", "France", user, 20, seat);
+
+        tickets.put(ticketId, ticket);
+        users.put(email, user);
+
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+        out.println(ticket.toJson());
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String ticketId = request.getParameter("ticketId");
+        Ticket ticket = tickets.get(ticketId);
+
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+        out.println(ticket.toJson());
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String section = request.getParameter("section");
+
+        Map<String, String> seats = ("A".equals(section)) ? seatsA : seatsB;
+
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+        out.println(new Gson().toJson(seats));
+    }
+
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String email = request.getParameter("email");
+
+        User removedUser = users.remove(email);
+        if (removedUser != null) {
+            String seat = removedUser.getSeat();
+            if (seatsA.containsValue(email)) {
+                seatsA.remove(seat);
+            } else if (seatsB.containsValue(email)) {
+                seatsB.remove(seat);
+            }
+
+            response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String email = request.getParameter("email");
+        String newSeat = request.getParameter("newSeat");
+
+        User user = users.get(email);
+        if (user != null) {
+            String oldSeat = user.getSeat();
+            if (seatsA.containsValue(email)) {
+                seatsA.remove(oldSeat);
+            } else if (seatsB.containsValue(email)) {
+                seatsB.remove(oldSeat);
+            }
+
+            if (newSeat != null && !newSeat.isEmpty()) {
+                if (seatsA.containsKey(newSeat) || seatsB.containsKey(newSeat)) {
+                    response.setStatus(HttpServletResponse.SC_CONFLICT);
+                    return;
+                }
+                user.setSeat(newSeat);
+                if ("A".equals(user.getSection())) {
+                    seatsA.put(newSeat, email);
+                } else {
+                    seatsB.put(newSeat, email);
+                }
+            } else {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    private String assignSeat(Map<String, String> seats, String section) {
+        for (int i = 1; i <= 50; i++) {
+            String seat = section + i;
+            if (!seats.containsKey(seat)) {
+                return seat;
+            }
+        }
+        return null;
+    }
+}
