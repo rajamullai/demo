@@ -1,0 +1,164 @@
+import java.io.*;
+import java.util.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+public class TrainTicketServlets extends HttpServlet {
+    // Data structures to store tickets, users, and seats
+    private Map<String, Ticket> tickets = new HashMap<>();
+    private Map<String, User> users = new HashMap<>();
+    private Map<String, String> seatsA = new HashMap<>();
+    private Map<String, String> seatsB = new HashMap<>();
+
+    // Purchase Ticket API - Servlet
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
+        String email = request.getParameter("email");
+        String section = request.getParameter("section");
+
+        // Generate unique ticket ID
+        String ticketId = UUID.randomUUID().toString();
+
+        // Assign seat based on section
+        String seat;
+        if ("A".equals(section)) {
+            seat = assignSeat(section);
+        } else {
+            seat = assignSeat(section);
+        }
+
+        // Create user and ticket
+        User user = new User(firstName, lastName, email);
+        Ticket ticket = new Ticket("London", "France", user, 20, seat);
+
+        // Store ticket, user, and seat information
+        tickets.put(ticketId, ticket);
+        users.put(email, user);
+        if ("A".equals(section)) {
+            seatsA.put(seat, email);
+        } else {
+            seatsB.put(seat, email);
+        }
+
+        // Send response with receipt JSON
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+        out.println(ticket.toJson());
+    }
+
+    // View Receipt Details API - Servlet
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String ticketId = request.getParameter("ticketId");
+
+        // Fetch receipt details from database using ticketId
+        Ticket ticket = tickets.get(ticketId);
+
+        // Send response with receipt details JSON
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+        out.println(ticket.toJson());
+    }
+
+    // View Users and Seats API - Servlet
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String section = request.getParameter("section");
+
+        // Fetch users and their seats from database for the specified section
+        Map<String, String> seats = ("A".equals(section)) ? seatsA : seatsB;
+
+        // Send response with users and seats JSON
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+        out.println(new Gson().toJson(seats));
+    }
+
+    // Remove User from Train API - Servlet
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String email = request.getParameter("email");
+
+        // Remove user from database
+        User removedUser = users.remove(email);
+        if (removedUser != null) {
+            // Remove user's seat from section
+            String seat = removedUser.getSeat();
+            if (seatsA.containsValue(email)) {
+                seatsA.remove(seat);
+            } else if (seatsB.containsValue(email)) {
+                seatsB.remove(seat);
+            }
+
+            // Send success response
+            response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            // Send error response
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    // Modify User's Seat API - Servlet
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String email = request.getParameter("email");
+        String newSeat = request.getParameter("newSeat");
+
+        // Modify user's seat in database
+        User user = users.get(email);
+        if (user != null) {
+            // Remove user's old seat from section
+            String oldSeat = user.getSeat();
+            if (seatsA.containsValue(email)) {
+                seatsA.remove(oldSeat);
+            } else if (seatsB.containsValue(email)) {
+                seatsB.remove(oldSeat);
+            }
+
+            // Assign new seat
+            if (newSeat != null && !newSeat.isEmpty()) {
+                if (seatsA.containsKey(newSeat) || seatsB.containsKey(newSeat)) {
+                    // New seat is already occupied
+                    response.setStatus(HttpServletResponse.SC_CONFLICT);
+                    return;
+                }
+                user.setSeat(newSeat);
+                if ("A".equals(user.getSection())) {
+                    seatsA.put(newSeat, email);
+                } else {
+                    seatsB.put(newSeat, email);
+                }
+            } else {
+                // No new seat provided
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+
+            // Send success response
+            response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            // User not found
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    // Method to assign seat based on section
+    private String assignSeat(String section) {
+        Map<String, String> seats = ("A".equals(section)) ? seatsA : seatsB;
+
+        // Find the first available seat
+        for (int i = 1; i <= 50; i++) {
+            String seat = section + i;
+            if (!seats.containsKey(seat)) {
+                return seat;
+            }
+        }
+        return null; // All seats occupied
+    }
+}
+
+// User class
+class User {
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String seat;
+
+    // Constructor,
