@@ -1,0 +1,49 @@
+// Purchase Ticket API - Servlet
+@WebServlet("/purchaseTicket")
+public class PurchaseTicketServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Parse request body JSON and process purchase
+        // Generate receipt JSON
+        // Send response with receipt JSON
+    }
+}
+
+// View Receipt Details API - Servlet
+@WebServlet("/receiptDetails")
+public class ReceiptDetailsServlet extends HttpServlet {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Extract receipt ID from request
+        // Fetch receipt details from database using ID
+        // Send response with receipt details JSON
+    }
+}
+
+// View Users and Seats API - Servlet
+@WebServlet("/usersAndSeats")
+public class UsersAndSeatsServlet extends HttpServlet {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Extract section from request
+        // Fetch users and their seats from database for the specified section
+        // Send response with users and seats JSON
+    }
+}
+
+// Remove User from Train API - Servlet
+@WebServlet("/removeUser")
+public class RemoveUserServlet extends HttpServlet {
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Extract user ID from request
+        // Remove user from database
+        // Send success or error response
+    }
+}
+
+// Modify User's Seat API - Servlet
+@WebServlet("/modifySeat")
+public class ModifySeatServlet extends HttpServlet {
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Extract user ID and new seat details from request body
+        // Modify user's seat in database
+        // Send success or error response
+    }
+}
